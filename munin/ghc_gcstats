@@ -1,0 +1,29 @@
+#!/usr/bin/env python
+import simplejson as json
+
+sampledata = json.loads('{"counters": {"gc_wall_seconds":718.84982,"mutator_wall_seconds":18593.219972,"mutator_cpu_seconds":47.982996,"gc_cpu_seconds":708.656291,"num_bytes_usage_samples":3857,"cumulative_bytes_used":372753355456,"bytes_copied":371706782944,"bytes_allocated":44868015464,"num_gcs":86790,"cpu_seconds":756.643287,"wall_seconds":19312.069792},"gauges":{"par_max_bytes_copied":0,"current_bytes_used":104068488,"par_avg_bytes_copied":0,"peak_megabytes_allocated":302,"current_bytes_slop":0,"max_bytes_slop":1711464,"max_bytes_used":117574008}}')
+
+if __name__ == '__main__':
+    import sys
+    args = len(sys.argv)
+    if args==2 and sys.argv[1] == 'autoconf':
+        print 'yes'
+    elif args==2 and sys.argv[1] == 'config':
+        print '''\
+graph_title ghc gc stats
+graph_vlabel count
+graph_category ghc
+'''
+        for t in ['counters', 'gauges']:
+            type = t[:-1].upper()
+            for field in sampledata[t].keys():
+                print '%(field)s.label %(field)s'%locals()
+                print '%(field)s.type %(type)'%locals()
+
+        print 'graph_args --base 1000'
+    else:
+        import urllib2
+        data = json.loads(urllib2.urlopen('http://127.0.0.1:9002/stats').read())
+        for t in ['counters', 'gauges']:
+            for k,v in data[t].items():
+                print '%s.value %s'%(k, v)
