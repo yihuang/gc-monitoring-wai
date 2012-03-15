@@ -11,6 +11,7 @@ Version:             0.1
 
 -- A short (one-line) description of the package.
 Synopsis:            a wai application to show GHC.GCStats
+description:         a wai application to show GHC.GCStats, look `test.hs` for usage, package also contains a munin plugin script in python.
 
 -- A longer description of the package.
 -- Description:         
@@ -48,7 +49,7 @@ Cabal-version:       >=1.2
 
 Library
   Exposed-modules:     Network.Wai.Application.Monitoring
-  ghc-options:         -Wall -O
+  ghc-options:         -Wall
   Build-depends:       base >= 4.5 && < 5
                      , transformers
                      , unordered-containers
