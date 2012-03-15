@@ -41,7 +41,7 @@ partitionGCStats (Stats.GCStats {..}) =
         , ("current_bytes_used"       , toJSON currentBytesUsed)
         , ("current_bytes_slop"       , toJSON currentBytesSlop)
         , ("max_bytes_slop"           , toJSON maxBytesSlop)
-        , ("peak_megabytes_allocated" , toJSON peakMegabytesAllocated)
+        , ("peak_megabytes_allocated" , toJSON $ peakMegabytesAllocated*1024*1024)
         , ("par_avg_bytes_copied"     , toJSON parAvgBytesCopied)
         , ("par_max_bytes_copied"     , toJSON parMaxBytesCopied)
         ]
