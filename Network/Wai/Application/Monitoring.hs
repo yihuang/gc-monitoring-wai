@@ -1,13 +1,14 @@
-{-# LANGUAGE ExistentialQuantification, RecordWildCards, OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards, OverloadedStrings #-}
 module Network.Wai.Application.Monitoring (monitorGC) where
 
 import Control.Monad.IO.Class (liftIO)
-import Data.Text (Text)
+import qualified Data.HashMap.Strict as M
 import qualified GHC.Stats as Stats
 import Network.HTTP.Types (status200)
 import Network.Wai (Application, Response(ResponseBuilder))
 import Blaze.ByteString.Builder (fromLazyByteString)
-import Data.Aeson (ToJSON(toJSON), encode)
+import Data.Aeson (toJSON, Value(Object))
+import Data.Aeson.Encode (encode)
 
 monitorGC :: Application
 monitorGC _ = do
@@ -17,37 +18,31 @@ monitorGC _ = do
                 [("Content-Type", "application/json")]
                 $ fromLazyByteString $ encode $ partitionGCStats stats
 
--- copied shamelessly from ekg.
--- Existential wrapper used for OO-style polymorphism.
-data Json = forall a. ToJSON a => Json a
-
-instance ToJSON Json where
-    toJSON (Json x) = toJSON x
-
 partitionGCStats :: Stats.GCStats
-                 -> ([(Text, Json)], [(Text, Json)])
-partitionGCStats (Stats.GCStats {..}) = (counters, gauges)
+                 -> Value
+partitionGCStats (Stats.GCStats {..}) =
+    Object $ M.fromList [("counters", counters), ("gauges", gauges)]
   where
-    counters =
-        [ ("bytes_allocated"          , Json bytesAllocated)
-        , ("num_gcs"                  , Json numGcs)
-        , ("num_bytes_usage_samples"  , Json numByteUsageSamples)
-        , ("cumulative_bytes_used"    , Json cumulativeBytesUsed)
-        , ("bytes_copied"             , Json bytesCopied)
-        , ("mutator_cpu_seconds"      , Json mutatorCpuSeconds)
-        , ("mutator_wall_seconds"     , Json mutatorWallSeconds)
-        , ("gc_cpu_seconds"           , Json gcCpuSeconds)
-        , ("gc_wall_seconds"          , Json gcWallSeconds)
-        , ("cpu_seconds"              , Json cpuSeconds)
-        , ("wall_seconds"             , Json wallSeconds)
+    counters = Object $ M.fromList
+        [ ("bytes_allocated"          , toJSON bytesAllocated)
+        , ("num_gcs"                  , toJSON numGcs)
+        , ("num_bytes_usage_samples"  , toJSON numByteUsageSamples)
+        , ("cumulative_bytes_used"    , toJSON cumulativeBytesUsed)
+        , ("bytes_copied"             , toJSON bytesCopied)
+        , ("mutator_cpu_seconds"      , toJSON mutatorCpuSeconds)
+        , ("mutator_wall_seconds"     , toJSON mutatorWallSeconds)
+        , ("gc_cpu_seconds"           , toJSON gcCpuSeconds)
+        , ("gc_wall_seconds"          , toJSON gcWallSeconds)
+        , ("cpu_seconds"              , toJSON cpuSeconds)
+        , ("wall_seconds"             , toJSON wallSeconds)
         ]
-    gauges =
-        [ ("max_bytes_used"           , Json maxBytesUsed)
-        , ("current_bytes_used"       , Json currentBytesUsed)
-        , ("current_bytes_slop"       , Json currentBytesSlop)
-        , ("max_bytes_slop"           , Json maxBytesSlop)
-        , ("peak_megabytes_allocated" , Json peakMegabytesAllocated)
-        , ("par_avg_bytes_copied"     , Json parAvgBytesCopied)
-        , ("par_max_bytes_copied"     , Json parMaxBytesCopied)
+    gauges = Object $ M.fromList
+        [ ("max_bytes_used"           , toJSON maxBytesUsed)
+        , ("current_bytes_used"       , toJSON currentBytesUsed)
+        , ("current_bytes_slop"       , toJSON currentBytesSlop)
+        , ("max_bytes_slop"           , toJSON maxBytesSlop)
+        , ("peak_megabytes_allocated" , toJSON peakMegabytesAllocated)
+        , ("par_avg_bytes_copied"     , toJSON parAvgBytesCopied)
+        , ("par_max_bytes_copied"     , toJSON parMaxBytesCopied)
         ]
 
