@@ -1,5 +1,9 @@
 {-# LANGUAGE RecordWildCards, OverloadedStrings #-}
-module Network.Wai.Application.Monitoring (monitorGC) where
+module Network.Wai.Application.Monitoring
+  ( monitorGC
+  , monitorGCResponse
+  , encodeGCStats
+  ) where
 
 import Control.Monad.IO.Class (liftIO)
 import qualified Data.HashMap.Strict as M
@@ -10,17 +14,20 @@ import Blaze.ByteString.Builder (fromLazyByteString)
 import Data.Aeson (toJSON, Value(Object))
 import Data.Aeson.Encode (encode)
 
-monitorGC :: Application
-monitorGC _ = do
+monitorGCResponse :: ResourceT IO Response
+monitorGCResponse = do
     stats <- liftIO Stats.getGCStats
     return $ ResponseBuilder
                 status200
                 [("Content-Type", "application/json")]
-                $ fromLazyByteString $ encode $ partitionGCStats stats
+                $ fromLazyByteString $ encode $ encodeGCStats stats
 
-partitionGCStats :: Stats.GCStats
-                 -> Value
-partitionGCStats (Stats.GCStats {..}) =
+monitorGC :: Application
+monitorGC = const monitorGCResponse
+
+encodeGCStats :: Stats.GCStats
+              -> Value
+encodeGCStats (Stats.GCStats {..}) =
     Object $ M.fromList [("counters", counters), ("gauges", gauges)]
   where
     counters = Object $ M.fromList
