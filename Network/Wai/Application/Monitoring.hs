@@ -6,6 +6,7 @@ module Network.Wai.Application.Monitoring
   ) where
 
 import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Trans.Resource (ResourceT)
 import qualified Data.HashMap.Strict as M
 import qualified GHC.Stats as Stats
 import Network.HTTP.Types (status200)
